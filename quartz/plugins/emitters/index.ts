@@ -8,3 +8,6 @@ export { Static } from "./static"
 export { ComponentResources } from "./componentResources"
 export { NotFoundPage } from "./404"
 export { CNAME } from "./cname"
+
+//! CUSTOM
+export { c_ThoughtsPage } from "./thoughtsPage"

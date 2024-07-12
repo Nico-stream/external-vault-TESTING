@@ -8,7 +8,8 @@ const PageTitle: QuartzComponent = ({ fileData, cfg, displayClass }: QuartzCompo
   const baseDir = pathToRoot(fileData.slug!)
   return (
     <h1 class={classNames(displayClass, "page-title")}>
-      <a href={baseDir}>{title}</a>
+      {/* //! CUSTOM */}
+      <a href={(new URL(`https://${cfg.baseUrl ?? "example.com"}`)).pathname+'index'}>{title}</a>
     </h1>
   )
 }

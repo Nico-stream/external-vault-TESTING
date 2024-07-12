@@ -8,7 +8,7 @@ import * as Plugin from "./quartz/plugins"
  */
 const config: QuartzConfig = {
   configuration: {
-    pageTitle: "🪴 Quartz 4.0",
+    pageTitle: "🏛️ NICO'S VAULT",
     enableSPA: true,
     enablePopovers: true,
     analytics: {
@@ -28,22 +28,22 @@ const config: QuartzConfig = {
       },
       colors: {
         lightMode: {
-          light: "#faf8f8",
-          lightgray: "#e5e5e5",
-          gray: "#b8b8b8",
-          darkgray: "#4e4e4e",
-          dark: "#2b2b2b",
-          secondary: "#284b63",
-          tertiary: "#84a59d",
-          highlight: "rgba(143, 159, 169, 0.15)",
-        },
-        darkMode: {
-          light: "#161618",
+          light: "#1C1C1C",     // 131315
           lightgray: "#393639",
           gray: "#646464",
           darkgray: "#d4d4d4",
           dark: "#ebebec",
-          secondary: "#7b97aa",
+          secondary: "#dfb121", // dfb121
+          tertiary: "#84a59d",
+          highlight: "rgba(143, 159, 169, 0.15)",
+        },
+        darkMode: {
+          light: "#1C1C1C",
+          lightgray: "#393639",
+          gray: "#646464",
+          darkgray: "#d4d4d4",
+          dark: "#ebebec",
+          secondary: "#FFFFF",
           tertiary: "#84a59d",
           highlight: "rgba(143, 159, 169, 0.15)",
         },
@@ -52,6 +52,7 @@ const config: QuartzConfig = {
   },
   plugins: {
     transformers: [
+      Plugin.HardLineBreaks(),
       Plugin.FrontMatter(),
       Plugin.CreatedModifiedDate({
         priority: ["frontmatter", "filesystem"],
@@ -64,7 +65,7 @@ const config: QuartzConfig = {
         },
         keepBackground: false,
       }),
-      Plugin.ObsidianFlavoredMarkdown({ enableInHtmlEmbed: false }),
+      Plugin.ObsidianFlavoredMarkdown({ enableInHtmlEmbed: true }),
       Plugin.GitHubFlavoredMarkdown(),
       Plugin.TableOfContents(),
       Plugin.CrawlLinks({ markdownLinkResolution: "shortest" }),
@@ -75,6 +76,7 @@ const config: QuartzConfig = {
       Plugin.AliasRedirects(),
       Plugin.ComponentResources(),
       Plugin.ContentPage(),
+      Plugin.c_ThoughtsPage(),
       Plugin.FolderPage(),
       Plugin.TagPage(),
       Plugin.ContentIndex({
@@ -89,3 +91,16 @@ const config: QuartzConfig = {
 }
 
 export default config
+
+/*
+lightMode: {
+  light: "#faf8f8",
+  lightgray: "#e5e5e5",
+  gray: "#b8b8b8",
+  darkgray: "#4e4e4e",
+  dark: "#2b2b2b",
+  secondary: "#284b63",
+  tertiary: "#84a59d",
+  highlight: "rgba(143, 159, 169, 0.15)",
+},
+*/

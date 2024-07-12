@@ -4,7 +4,7 @@ import BodyConstructor from "../../components/Body"
 import { pageResources, renderPage } from "../../components/renderPage"
 import { FullPageLayout } from "../../cfg"
 import { FilePath, FullSlug } from "../../util/path"
-import { sharedPageComponents } from "../../../quartz.layout"
+import { defaultContentPageLayout, sharedPageComponents } from "../../../quartz.layout" //! CUSTOM
 import { NotFound } from "../../components"
 import { defaultProcessedContent } from "../vfile"
 import { write } from "./helpers"
@@ -14,9 +14,16 @@ import DepGraph from "../../depgraph"
 export const NotFoundPage: QuartzEmitterPlugin = () => {
   const opts: FullPageLayout = {
     ...sharedPageComponents,
+    ...defaultContentPageLayout,  //! CUSTOM
     pageBody: NotFound(),
     beforeBody: [],
-    left: [],
+    // left: [ //! CUSTOM
+    //   Component.PageTitle(),
+    //   Component.MobileOnly(Component.Spacer()),
+    //   // Component.Search(),
+    //   // Component.Darkmode(),
+    //   // Component.DesktopOnly(Component.Explorer()),
+    // ],
     right: [],
   }
 

@@ -20,6 +20,9 @@ import MobileOnly from "./MobileOnly"
 import RecentNotes from "./RecentNotes"
 import Breadcrumbs from "./Breadcrumbs"
 
+//! CUSTOM
+import cPostprocess from "./postprocess"
+
 export {
   ArticleTitle,
   Content,
@@ -42,4 +45,7 @@ export {
   RecentNotes,
   NotFound,
   Breadcrumbs,
+
+  //! CUSTOM
+  cPostprocess
 }

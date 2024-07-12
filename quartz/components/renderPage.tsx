@@ -201,20 +201,24 @@ export function renderPage(
       ))}
     </div>
   )
-
+  //! CUSTOM
   const RightComponent = (
-    <div class="right sidebar">
+    <div class="right sidebar overflow">   
       {right.map((BodyComponent) => (
         <BodyComponent {...componentData} />
       ))}
     </div>
   )
+  
+  //! CUSTOM
+  const is_custom_page = ["_Thoughts", "index", "404"].indexOf(slug) > -1;
 
   const lang = componentData.fileData.frontmatter?.lang ?? cfg.locale?.split("-")[0] ?? "en"
   const doc = (
     <html lang={lang}>
       <Head {...componentData} />
-      <body data-slug={slug}>
+      {/* //! CUSTOM */}
+      <body data-slug={slug} class={is_custom_page ? "_custom" : ""}>
         <div id="quartz-root" class="page">
           <Body {...componentData}>
             {LeftComponent}
@@ -231,9 +235,11 @@ export function renderPage(
                   ))}
                 </div>
               </div>
-              <Content {...componentData} />
+              {/* //! CUSTOM */}
+              { "_Thoughts" === slug ? componentData["_custom_html"] : <Content {...componentData} /> }
             </div>
-            {RightComponent}
+            {/* //! CUSTOM */}
+            {is_custom_page ? <></> : RightComponent}  
           </Body>
           <Footer {...componentData} />
         </div>

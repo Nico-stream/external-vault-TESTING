@@ -1,3 +1,288 @@
+@use "./variables.scss" as *;
 @use "./base.scss";
 
+$link-color: #79a9ec;
+$link-color-hover: #afcbf4;
+$page-padding: 4rem;
+$left-panel-width: calc($sidePanelWidth * 0.8);
+$right-panel-padding: 0.2rem;
+$center-border-size: 1px;
+$body-background-color: #161616;
+$graph-background-color: $body-background-color;    // var(--light)
+
 // put your custom CSS here!
+
+
+* {
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Microsoft YaHei Light", sans-serif;
+}
+
+
+//* BASE ---
+
+.tag-link { color: $link-color; }
+a.internal:not(.tag-link), a.external {
+    color: $link-color;
+    text-decoration: underline;
+    background-color: transparent;
+
+    &:hover {
+        color: $link-color-hover !important; 
+    }
+}
+
+@media all and (min-width: $fullPageWidth) {
+
+    ._custom {
+        & .center,
+        & footer {
+            width: calc(100vw - $left-panel-width) !important;
+            @media all and (max-width: $fullPageWidth) {
+                width: initial;
+            }
+        }
+
+        #c-page-border {
+            width: calc(100vw - $left-panel-width);
+        }
+    }
+
+    html {
+        // scrollbar-width: none;
+    }
+
+    .page {
+        & article {
+    
+        }
+    
+        & > #quartz-body {
+    
+            & .sidebar {
+                
+            }
+    
+            & .sidebar.left {
+                left: 0;
+                padding: 0 0.2rem 0 1rem;
+                width: $left-panel-width;
+                // height: calc(100vh - $topSpacing);
+                // height: 700;
+            }
+    
+            & .sidebar.right {
+                right: $right-panel-padding; // bottom: -1;
+                width: calc(100vw - $left-panel-width - $pageWidth - 2 * $page-padding - $right-panel-padding);
+                flex-wrap: nowrap;
+            }
+        }
+    
+        & .center,
+        & footer {
+            margin: $center-border-size;
+            padding: 0 $page-padding;
+            @media all and (max-width: $fullPageWidth) {
+                border-width: 0;
+            }
+    
+            margin-left: $left-panel-width;
+            margin-right: 0;
+            width: $pageWidth;
+            @media all and (max-width: $fullPageWidth) {
+                width: initial;
+                margin-left: 0;
+                margin-right: 0;
+
+            }
+            .page-header {
+                margin-left: 0;
+                margin-right: 0;
+            }
+        }
+    }
+    
+    #c-page-border {
+        position: fixed;
+        left: 0; top: 0;
+        width: $pageWidth;
+        height: 100vh;
+        padding: 0 $page-padding;
+        border: 0 solid #0E1013;
+        border-width: 0 $center-border-size;
+        background-color: $body-background-color;  // 0E1013
+        margin-left: $left-panel-width;
+        pointer-events: none;
+        @media all and (max-width: $fullPageWidth) {
+            display: none;
+        }
+        z-index: -1;
+    }
+
+    #c-header {
+        position: fixed;
+        left: 0; top: 0;
+        width: 100vw;
+        height: 40px;
+        background-color: #35353a;
+        @media all and (max-width: $fullPageWidth) {
+            display: none;
+        }
+    }
+}
+
+h1.page-title > a {
+    font-family: "Times New Roman",ui-sans-serif,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Microsoft YaHei Light,sans-serif;
+    font-weight: bold;
+}
+
+ul.overflow,
+ol.overflow, .sidebar.overflow {
+    scrollbar-width: thin;
+}
+
+@media all and (min-width: $fullPageWidth) {
+
+    .sidebar.overflow {
+        max-height: calc(100vh - $topSpacing);
+        overflow-y: auto;
+        overflow-x: hidden;
+
+        // clearfix
+        content: "";
+        clear: both;
+
+        & > li:last-of-type {
+            margin-bottom: 30px;
+        }
+
+        &:after {
+            pointer-events: none;
+            content: "";
+            width: calc(100vw - $left-panel-width - $pageWidth - 2 * $page-padding - 2 * $center-border-size - $right-panel-padding - 15px);
+            height: 50px;
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            background: linear-gradient(transparent 0px, var(--light));
+            z-index: 10;
+        }
+    }
+}
+
+//* SEARCH
+
+.search {
+    max-width: calc($left-panel-width - 2 * 1rem);
+}
+
+
+//* EXPLORER
+
+.gradient-container {
+    // position: relative; /* Ensure positioning context for pseudo-element */
+    // width: 100%; /* Adjust width as needed */
+    // height: 400px; /* Adjust initial height */
+    // background: linear-gradient(to bottom, rgb(0, 0, 0, 0) 95%, #0E1013 100%);
+}
+
+#explorer-ul {
+    li {
+        margin-right: 2px;
+    }
+}
+
+#explorer-content {
+  
+    & ul {
+        // padding-left: 2px;
+        & li {
+            font-size: 0.8rem;
+            line-height: 1.2;
+            padding: 5px 0;
+            
+            a {
+                padding: 5px 0;  
+            }
+        }
+    }
+}
+
+#explorer-ul > li {
+    padding: 0 !important;
+}
+
+:not(#explorer-ul) > li > .folder-outer {
+    .content {
+        padding-left: 10px !important;
+    }
+    
+}
+
+li:has(.folder-container) {
+    padding: 0 !important;
+}
+
+.folder-outer > ul {
+    &:not(#explorer-ul > li > &) {
+      border: 0px solid grey !important;
+      border-width: 0 0 0 1px !important;
+      margin-left: 4px !important;
+    }
+}
+
+
+
+//* GRAPH
+
+
+
+.graph {
+    & > .graph-outer {
+        height: 450px;
+
+        & > #graph-container {
+            background-color: $graph-background-color;
+        }
+    }
+    
+    & > #global-graph-outer {
+        & > #global-graph-container {
+            height: 90vh;
+            width: 80vw;
+            background-color: $graph-background-color;
+        }
+    }
+}
+
+
+//* Backlinks
+
+@media all and (min-width: $fullPageWidth) {
+    .sidebar.right {
+        // asd
+    }
+}
+
+// @media all and (min-width: $fullPageWidth) {
+//     #c-explorer-fade {
+//         position: fixed;
+//         bottom: 0;
+//         width: calc($sidePanelWidth * 0.8);
+//         height: 1rem;
+//         background-color: red;
+//     }
+// }
+
+// <div class="left sidebar">
+//     <h1 class="page-title"></h1>
+//     <div class="search"></div>
+//     <div class="darkmode"></div>
+//     <div class="explorer desktop-only">
+//         <button id="explorer"/>
+//         <div id="explorer-content">
+//             <ul id="explorer-ul"></ul>
+//         </div>
+//     </div>
+// </div>

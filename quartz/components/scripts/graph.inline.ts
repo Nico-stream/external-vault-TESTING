@@ -29,6 +29,7 @@ async function renderGraph(container: string, fullSlug: FullSlug) {
   const slug = simplifySlug(fullSlug)
   const visited = getVisited()
   const graph = document.getElementById(container)
+  const isLocal = container === "graph-container";  //! CUSTOM
   if (!graph) return
   removeAllChildren(graph)
 
@@ -81,24 +82,89 @@ async function renderGraph(container: string, fullSlug: FullSlug) {
 
   const neighbourhood = new Set<SimpleSlug>()
   const wl: (SimpleSlug | "__SENTINEL")[] = [slug, "__SENTINEL"]
-  if (depth >= 0) {
-    while (depth >= 0 && wl.length > 0) {
-      // compute neighbours
-      const cur = wl.shift()!
-      if (cur === "__SENTINEL") {
-        depth--
-        wl.push("__SENTINEL")
-      } else {
-        neighbourhood.add(cur)
-        const outgoing = links.filter((l) => l.source === cur)
-        const incoming = links.filter((l) => l.target === cur)
-        wl.push(...outgoing.map((l) => l.target), ...incoming.map((l) => l.source))
+  
+  //! CUSTOM SECTION
+  // console.log("HELLO; WORLD!");
+  let i = 0;
+  const show_orphans = false;
+  const keep_connection: boolean[] = Array(links.length).fill(true);
+  let global_depth = 0;
+
+  if (isLocal) {
+
+    const queue: SimpleSlug[] = [slug];
+    const queue_depth: number[] = [0];
+    const hashmap: Record<SimpleSlug, boolean> = {};
+    const hashmap_temporary_bucket: SimpleSlug[] = [];
+    hashmap[slug] = true;
+    neighbourhood.add(slug);
+
+    const neighboring_links_function = (cur: SimpleSlug, conn1: SimpleSlug, conn2: SimpleSlug, i: number) => {
+      if (conn1 !== cur) return false;
+          
+        if (hashmap[conn2]) { 
+          keep_connection[i] = false;
+          return false;
+        }
+        neighbourhood.add(conn2)
+        return true;
+    }
+
+    while (queue.length > 0) {
+      const cur = queue.shift()!
+      const current_depth = queue_depth.shift()!
+      // console.log("H0 ", cur, current_depth)
+
+      if (global_depth != current_depth) {
+        // console.log("--------------")
+        // console.log(current_depth)
+        global_depth = current_depth
+
+        hashmap_temporary_bucket.forEach((l) => { hashmap[l] = true; });
+        hashmap_temporary_bucket.length = 0;
+      }
+      
+      if (depth == -1 || current_depth <= depth) {   
+        const outgoing = links.filter((l, i) => neighboring_links_function(cur, l.source, l.target, i))
+        let incoming: LinkData[] = [] // links.filter((l) => l.target === cur)
+        if (!isLocal) incoming = links.filter((l) => neighboring_links_function(cur, l.target, l.source, i));
+        queue.push(...outgoing.map((l) => l.target), ...incoming.map((l) => l.source))
+        queue_depth.push(...Array(outgoing.length+incoming.length).fill(current_depth+1))
+        hashmap_temporary_bucket.push(...outgoing.map((l) => l.target), ...incoming.map((l) => l.source))
       }
     }
+
+    // while (depth >= 0 && wl.length > 0) {
+    //   // compute neighbours
+    //   const cur = wl.shift()!
+    //   console.log("cur", cur)
+    //   if (cur === "__SENTINEL") {
+    //     depth--
+    //     wl.push("__SENTINEL")
+    //     if (i == 1) break;
+    //     i++;
+    //   } else {
+    //     console.log("cur ADD", cur)
+    //     neighbourhood.add(cur)
+    //     const outgoing = links.filter((l) => l.source === cur)
+    //     const incoming: LinkData[] = links.filter((l) => l.target === cur)
+    //     wl.push(...outgoing.map((l) => l.target), ...incoming.map((l) => l.source))
+    //   }
+    // }
   } else {
-    validLinks.forEach((id) => neighbourhood.add(id))
+    const hashmap: Record<SimpleSlug, boolean> = {};
+    if (!show_orphans) {
+      links.forEach(l => { 
+        if (!hashmap[l.target] || !hashmap[l.source])  {
+          hashmap[l.target] = true; 
+          hashmap[l.source] = true; 
+        }
+      })
+    }
+    validLinks.forEach((id) => { if (show_orphans || hashmap[id]) neighbourhood.add(id) })
     if (showTags) tags.forEach((tag) => neighbourhood.add(tag))
   }
+  //! ------------------------------------------------
 
   const graphData: { nodes: NodeData[]; links: LinkData[] } = {
     nodes: [...neighbourhood].map((url) => {
@@ -109,7 +175,7 @@ async function renderGraph(container: string, fullSlug: FullSlug) {
         tags: data.get(url)?.tags ?? [],
       }
     }),
-    links: links.filter((l) => neighbourhood.has(l.source) && neighbourhood.has(l.target)),
+    links: links.filter((l, i) => neighbourhood.has(l.source) && neighbourhood.has(l.target) && keep_connection[i]), //! CUSTOM
   }
 
   const simulation: d3.Simulation<NodeData, LinkData> = d3
@@ -124,7 +190,7 @@ async function renderGraph(container: string, fullSlug: FullSlug) {
     )
     .force("center", d3.forceCenter().strength(centerForce))
 
-  const height = Math.max(graph.offsetHeight, 250)
+  const height = isLocal ? 450 : Math.max(graph.offsetHeight, 250)  //! CUSTOM
   const width = graph.offsetWidth
 
   const svg = d3
@@ -159,11 +225,43 @@ async function renderGraph(container: string, fullSlug: FullSlug) {
     }
   }
 
+  //! CUSTOM SECTION
+  const highlight_graph = (linkNodes: d3.Selection<d3.BaseType, unknown, HTMLElement, any>) => {
+    // fade out non-neighbour nodes
+    connectedNodes = linkNodes.data().flatMap((d: any) => [d.source.id, d.target.id])
+
+    d3.selectAll<HTMLElement, NodeData>(".link")
+      .transition()
+      .duration(200)
+      .style("opacity", 0.2)
+    d3.selectAll<HTMLElement, NodeData>(".node")
+      .filter((d) => !connectedNodes.includes(d.id))
+      .transition()
+      .duration(200)
+      .style("opacity", 0.2)
+    d3.selectAll<HTMLElement, NodeData>("text")
+      .filter((d) => !connectedNodes.includes(d.id))
+      .transition()
+      .duration(200)
+      .style("opacity", 0.2)
+  };
+  const de_highlight_graph = () => {
+    d3.selectAll<HTMLElement, NodeData>(".link").transition().duration(200).style("opacity", 1)
+    d3.selectAll<HTMLElement, NodeData>(".node").transition().duration(200).style("opacity", 1)
+    d3.selectAll<HTMLElement, NodeData>("text").transition().duration(200).style("opacity", 1)  //! CUSTOM
+  };
+
+  let DRAGGING = false;
+  let ONTOP    = false;
+  let K_ZOOM   = 1;
+  //! ------------------------------------------------
+
   const drag = (simulation: d3.Simulation<NodeData, LinkData>) => {
     function dragstarted(event: any, d: NodeData) {
       if (!event.active) simulation.alphaTarget(1).restart()
       d.fx = d.x
       d.fy = d.y
+      DRAGGING = true;  //! CUSTOM
     }
 
     function dragged(event: any, d: NodeData) {
@@ -175,6 +273,10 @@ async function renderGraph(container: string, fullSlug: FullSlug) {
       if (!event.active) simulation.alphaTarget(0)
       d.fx = null
       d.fy = null
+
+      //! CUSTOM
+      DRAGGING = false;
+      if (!ONTOP) de_highlight_graph();
     }
 
     const noop = () => {}
@@ -187,7 +289,7 @@ async function renderGraph(container: string, fullSlug: FullSlug) {
 
   function nodeRadius(d: NodeData) {
     const numLinks = links.filter((l: any) => l.source.id === d.id || l.target.id === d.id).length
-    return 2 + Math.sqrt(numLinks)
+    return (2 * 2 + Math.sqrt(numLinks))   //! CUSTOM
   }
 
   let connectedNodes: SimpleSlug[] = []
@@ -205,25 +307,27 @@ async function renderGraph(container: string, fullSlug: FullSlug) {
       window.spaNavigate(new URL(targ, window.location.toString()))
     })
     .on("mouseover", function (_, d) {
+      ONTOP = true; //! CUSTOM
       const currentId = d.id
       const linkNodes = d3
         .selectAll(".link")
         .filter((d: any) => d.source.id === currentId || d.target.id === currentId)
 
-      if (focusOnHover) {
-        // fade out non-neighbour nodes
-        connectedNodes = linkNodes.data().flatMap((d: any) => [d.source.id, d.target.id])
+      // if (focusOnHover) {
+      //   // fade out non-neighbour nodes
+      //   connectedNodes = linkNodes.data().flatMap((d: any) => [d.source.id, d.target.id])
 
-        d3.selectAll<HTMLElement, NodeData>(".link")
-          .transition()
-          .duration(200)
-          .style("opacity", 0.2)
-        d3.selectAll<HTMLElement, NodeData>(".node")
-          .filter((d) => !connectedNodes.includes(d.id))
-          .transition()
-          .duration(200)
-          .style("opacity", 0.2)
-      }
+      //   d3.selectAll<HTMLElement, NodeData>(".link")
+      //     .transition()
+      //     .duration(200)
+      //     .style("opacity", 0.2)
+      //   d3.selectAll<HTMLElement, NodeData>(".node")
+      //     .filter((d) => !connectedNodes.includes(d.id))
+      //     .transition()
+      //     .duration(200)
+      //     .style("opacity", 0.2)
+      // }
+      if (focusOnHover && !DRAGGING) highlight_graph(linkNodes); //! CUSTOM
 
       // highlight links
       linkNodes.transition().duration(200).attr("stroke", "var(--gray)").attr("stroke-width", 1)
@@ -242,10 +346,14 @@ async function renderGraph(container: string, fullSlug: FullSlug) {
         .style("font-size", bigFont + "em")
     })
     .on("mouseleave", function (_, d) {
-      if (focusOnHover) {
-        d3.selectAll<HTMLElement, NodeData>(".link").transition().duration(200).style("opacity", 1)
-        d3.selectAll<HTMLElement, NodeData>(".node").transition().duration(200).style("opacity", 1)
-      }
+      // if (focusOnHover) {
+      //   d3.selectAll<HTMLElement, NodeData>(".link").transition().duration(200).style("opacity", 1)
+      //   d3.selectAll<HTMLElement, NodeData>(".node").transition().duration(200).style("opacity", 1)
+      // }
+      //! CUSTOM
+      ONTOP = false;
+      if (focusOnHover && !DRAGGING) de_highlight_graph();
+      
       const currentId = d.id
       const linkNodes = d3
         .selectAll(".link")
@@ -271,7 +379,7 @@ async function renderGraph(container: string, fullSlug: FullSlug) {
     .attr("dy", (d) => -nodeRadius(d) + "px")
     .attr("text-anchor", "middle")
     .text((d) => d.text)
-    .style("opacity", (opacityScale - 1) / 3.75)
+    .style("opacity", (opacityScale - 0.25) / 0.75)  //! CUSTOM
     .style("pointer-events", "none")
     .style("font-size", fontSize + "em")
     .raise()
@@ -285,15 +393,19 @@ async function renderGraph(container: string, fullSlug: FullSlug) {
         .zoom<SVGSVGElement, NodeData>()
         .extent([
           [0, 0],
-          [width, height],
+          isLocal ? [width, height] : [width*1.5, height*1.6],  //! CUSTOM
         ])
         .scaleExtent([0.25, 4])
         .on("zoom", ({ transform }) => {
+          K_ZOOM = 1/transform.k; //! CUSTOM
           link.attr("transform", transform)
           node.attr("transform", transform)
           const scale = transform.k * opacityScale
-          const scaledOpacity = Math.max((scale - 1) / 3.75, 0)
-          labels.attr("transform", transform).style("opacity", scaledOpacity)
+
+          //! CUSTOM
+          // const scaledOpacity = Math.max((scale - 0.25) / 0.75, 0) * (ONTOP || DRAGGING ? 1 : 0)   //! CUSTOM
+          // console.log(scale, (scale - 1), scaledOpacity);
+          labels.attr("transform", transform) // .style("opacity", scaledOpacity)
         }),
     )
   }

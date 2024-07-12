@@ -108,6 +108,15 @@ document.addEventListener("nav", () => {
   if (lastItem) {
     observer.observe(lastItem)
   }
+
+  //! CUSTOM
+  const element = document.getElementById('explorer-ul');
+  if (!element) return;
+  const measurementFromTopToStartingPoint = element.getBoundingClientRect().top;
+  console.log(measurementFromTopToStartingPoint)
+  let height = `calc(100vh - ${measurementFromTopToStartingPoint}px - 1rem)`;
+  element.style.height = height;
+  element.style.maxHeight = height;
 })
 
 /**

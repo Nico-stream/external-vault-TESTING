@@ -3,10 +3,10 @@ name: Build and Test
 on:
   pull_request:
     branches:
-      - custom
+      - v4
   push:
     branches:
-      - custom
+      - v4
 
 jobs:
   build-and-test:

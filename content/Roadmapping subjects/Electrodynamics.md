@@ -1,0 +1,5 @@
+---
+subject: physics
+---
+
+[[Classical Mechanics]]

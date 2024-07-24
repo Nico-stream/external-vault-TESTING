@@ -6,7 +6,7 @@ on:
       - custom
   push:
     branches:
-      - v4
+      - custom
 
 jobs:
   build-and-test:
